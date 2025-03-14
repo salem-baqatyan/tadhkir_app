@@ -22,6 +22,9 @@ class AlarmGroupProvider extends ChangeNotifier {
 
   Future<void> updateGroupState(int groupId) async {
     await sqlDb.updateData('UPDATE Groups SET active = 0 WHERE id = $groupId');
+    await sqlDb.updateData(
+      'UPDATE Contacts SET active = 0 WHERE group_id = $groupId',
+    );
     loadGroups();
   }
 

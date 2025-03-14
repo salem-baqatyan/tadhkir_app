@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
-import 'package:tadhkir_app/core/pp/pp.dart';
+import 'package:tadhkir_app/pp.dart';
 import 'package:tadhkir_app/core/shered_widget/action_button_widget.dart';
 import 'package:tadhkir_app/core/shered_widget/custom_app_bar.dart';
 import 'package:tadhkir_app/core/styles/Colors.dart';

@@ -1,6 +1,5 @@
 import 'package:tadhkir_app/features/home_screen.dart';
 import 'package:tadhkir_app/features/second_features/contact_screen.dart';
-import 'package:tadhkir_app/features/second_features/test.dart';
 import 'package:flutter/material.dart';
 
 class RouteName {

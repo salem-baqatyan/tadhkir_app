@@ -1,5 +1,5 @@
 import 'package:provider/provider.dart';
-import 'package:tadhkir_app/core/pp/pp.dart';
+import 'package:tadhkir_app/pp.dart';
 import 'package:tadhkir_app/core/utils/route.dart';
 import 'package:tadhkir_app/notification_service.dart';
 import 'package:tadhkir_app/sqldb.dart';

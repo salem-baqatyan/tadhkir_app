@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fast_contacts/fast_contacts.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:permission_handler/permission_handler.dart'; // استيراد الحزمة
 import 'package:tadhkir_app/core/shered_widget/custom_app_bar.dart';
 import 'package:tadhkir_app/core/styles/Colors.dart';
 import 'package:tadhkir_app/sqldb.dart';
@@ -16,6 +16,7 @@ class ContactScreen extends StatefulWidget {
 class _ContactScreenState extends State<ContactScreen> {
   SqlDb sqlDb = SqlDb();
   List list = [];
+  List<Contact> selectedContacts = []; // جهات الاتصال المحددة
   int? groupId;
   int? active;
   String? time;
@@ -31,33 +32,66 @@ class _ContactScreenState extends State<ContactScreen> {
           groupId = args['group_id'];
           active = args['active'];
         });
-        readData();
+        _checkAndRequestPermission(); // طلب إذن الوصول إلى جهات الاتصال
       }
     });
   }
 
+  // طلب الإذن للوصول إلى جهات الاتصال
+  Future<void> _checkAndRequestPermission() async {
+    final permissionStatus = await Permission.contacts.status;
+    if (!permissionStatus.isGranted) {
+      await Permission.contacts.request();
+    }
+    readData();
+  }
+
+  // قراءة البيانات من قاعدة البيانات
   Future<void> readData() async {
     list.clear();
     List<Map> response = await sqlDb.readData(
-        "SELECT * FROM Contacts WHERE group_id = $groupId ORDER BY name ASC");
+      "SELECT * FROM Contacts WHERE group_id = $groupId ORDER BY name ASC",
+    );
     list.addAll(response);
     if (mounted) setState(() {});
   }
 
+  // إضافة جهات الاتصال المحددة إلى قاعدة البيانات
   Future<void> _pickContacts() async {
-    final selectedContacts = await showDialog<List<Contact>>(
-      context: context,
-      builder: (context) => ContactPickerDialog(),
+    final selectedContactsFromPicker = await Navigator.push<List<Contact>>(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) =>
+                ContactPickerScreen(selectedContacts: selectedContacts),
+      ),
     );
-    if (selectedContacts != null) {
-      for (var contact in selectedContacts) {
-        await sqlDb.insertData('''
-          INSERT INTO Contacts (group_id, name, phone, active)
-          VALUES ($groupId, "${contact.displayName}", "${contact.phones.map((e) => e.number).join(', ')}", $active)
-        ''');
+    if (selectedContactsFromPicker != null) {
+      setState(() {
+        selectedContacts = selectedContactsFromPicker;
+      });
+
+      // إضافة جهات الاتصال إلى قاعدة البيانات مع التحقق من التكرار
+      for (var contact in selectedContactsFromPicker) {
+        // التأكد من عدم وجود جهة الاتصال مسبقًا
+        bool exists = await _checkIfContactExists(contact);
+        if (!exists) {
+          await sqlDb.insertData(''' 
+            INSERT INTO Contacts (group_id, name, phone, active)
+            VALUES ($groupId, "${contact.displayName}", "${contact.phones.map((e) => e.number).join(', ')}", $active)
+          ''');
+        }
       }
       readData();
     }
+  }
+
+  // التحقق من وجود جهة الاتصال في قاعدة البيانات
+  Future<bool> _checkIfContactExists(Contact contact) async {
+    List<Map> result = await sqlDb.readData('''
+      SELECT * FROM Contacts WHERE name = "${contact.displayName}" AND group_id = $groupId
+    ''');
+    return result.isNotEmpty;
   }
 
   @override
@@ -73,37 +107,48 @@ class _ContactScreenState extends State<ContactScreen> {
           children: [
             CustomAppBar(tital: 'مجموعة ساعة: $time'),
             Expanded(
-              child: list.isEmpty
-                  ? const Center(child: Text("لا توجد جهات اتصال"))
-                  : ListView.builder(
-                      itemCount: list.length,
-                      itemBuilder: (context, i) {
-                        return ListTile(
-                          title: Text(list[i]['name']),
-                          subtitle: Text(list[i]['phone']),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.phone,
-                                    color: Colors.green),
-                                onPressed: () => launchUrl(
-                                    Uri(scheme: 'tel', path: list[i]['phone'])),
-                              ),
-                              IconButton(
-                                icon:
-                                    const Icon(Icons.delete, color: Colors.red),
-                                onPressed: () async {
-                                  await sqlDb.deleteData(
-                                      "DELETE FROM Contacts WHERE id = ${list[i]['id']}");
-                                  readData();
-                                },
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
+              child:
+                  list.isEmpty
+                      ? const Center(child: Text("لا توجد جهات اتصال"))
+                      : ListView.builder(
+                        itemCount: list.length,
+                        itemBuilder: (context, i) {
+                          return ListTile(
+                            title: Text(list[i]['name']),
+                            subtitle: Text(list[i]['phone']),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.phone,
+                                    color: Colors.green,
+                                  ),
+                                  onPressed:
+                                      () => launchUrl(
+                                        Uri(
+                                          scheme: 'tel',
+                                          path: list[i]['phone'],
+                                        ),
+                                      ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.delete,
+                                    color: Colors.red,
+                                  ),
+                                  onPressed: () async {
+                                    await sqlDb.deleteData(
+                                      "DELETE FROM Contacts WHERE id = ${list[i]['id']}",
+                                    );
+                                    readData();
+                                  },
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
             ),
           ],
         ),
@@ -112,12 +157,16 @@ class _ContactScreenState extends State<ContactScreen> {
   }
 }
 
-class ContactPickerDialog extends StatefulWidget {
+class ContactPickerScreen extends StatefulWidget {
+  final List<Contact> selectedContacts;
+
+  ContactPickerScreen({required this.selectedContacts});
+
   @override
-  _ContactPickerDialogState createState() => _ContactPickerDialogState();
+  _ContactPickerScreenState createState() => _ContactPickerScreenState();
 }
 
-class _ContactPickerDialogState extends State<ContactPickerDialog> {
+class _ContactPickerScreenState extends State<ContactPickerScreen> {
   List<Contact> _contacts = [];
   List<Contact> _filteredContacts = [];
   List<Contact> _selectedContacts = [];
@@ -133,7 +182,7 @@ class _ContactPickerDialogState extends State<ContactPickerDialog> {
 
   Future<void> _loadContacts() async {
     setState(() => _isLoading = true);
-    await Permission.contacts.request();
+    await Permission.contacts.request(); // طلب الإذن هنا أيضًا
     _contacts = await FastContacts.getAllContacts();
     _filteredContacts = List.from(_contacts);
     setState(() => _isLoading = false);
@@ -142,9 +191,29 @@ class _ContactPickerDialogState extends State<ContactPickerDialog> {
   void _filterContacts() {
     String query = _searchController.text.toLowerCase();
     setState(() {
-      _filteredContacts = _contacts
-          .where((contact) => contact.displayName.toLowerCase().contains(query))
-          .toList();
+      // فلترة العناصر المحددة وغير المحددة معًا
+      _filteredContacts = [
+        ..._selectedContacts.where(
+          (contact) =>
+              contact.displayName.toLowerCase().contains(query) ||
+              contact.phones.any(
+                (phone) =>
+                    phone.number.replaceAll(RegExp(r'\D'), '').contains(query),
+              ),
+        ),
+        ..._contacts.where(
+          (contact) =>
+              !_selectedContacts.contains(
+                contact,
+              ) && // التأكد من أن العنصر غير محدد
+              (contact.displayName.toLowerCase().contains(query) ||
+                  contact.phones.any(
+                    (phone) => phone.number
+                        .replaceAll(RegExp(r'\D'), '')
+                        .contains(query),
+                  )),
+        ),
+      ];
     });
   }
 
@@ -160,26 +229,38 @@ class _ContactPickerDialogState extends State<ContactPickerDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text("اختر جهات الاتصال"),
-      content: SizedBox(
-        width: double.maxFinite,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("اختر جهات الاتصال"),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context, _selectedContacts);
+            },
+            child: const Text("تأكيد", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
                 labelText: "بحث",
                 prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
               ),
             ),
-            const SizedBox(height: 10),
-            _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : Expanded(
-                    child: ListView.builder(
-                      shrinkWrap: true,
+          ),
+          Expanded(
+            child:
+                _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : ListView.builder(
                       itemCount: _filteredContacts.length,
                       itemBuilder: (context, index) {
                         final contact = _filteredContacts[index];
@@ -195,24 +276,9 @@ class _ContactPickerDialogState extends State<ContactPickerDialog> {
                         );
                       },
                     ),
-                  ),
-          ],
-        ),
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text("إلغاء"),
-        ),
-        TextButton(
-          onPressed: () {
-            List<Contact> finalContacts = List.from(_selectedContacts);
-            _selectedContacts.clear(); // إعادة ضبط القائمة
-            Navigator.pop(context, finalContacts);
-          },
-          child: Text("تأكيد"),
-        ),
-      ],
     );
   }
 }
