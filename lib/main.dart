@@ -1,4 +1,7 @@
+import 'package:provider/provider.dart';
+import 'package:tadhkir_app/core/pp/pp.dart';
 import 'package:tadhkir_app/core/utils/route.dart';
+import 'package:tadhkir_app/notification_service.dart';
 import 'package:tadhkir_app/sqldb.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -7,9 +10,19 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService.initialize(); // ✅ تهيئة الإشعارات
+  SqlDb sqlDb = SqlDb(); // إنشاء كائن لقاعدة البيانات
+  await sqlDb.intialDb(); // تهيئة قاعدة البيانات
 
-  await SqlDb().intialDb();
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AlarmGroupProvider()),
+        ChangeNotifierProvider(create: (_) => sqlDb), // 🔹 إضافة SqlDb كمزود
+      ],
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {

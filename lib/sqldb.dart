@@ -17,8 +17,12 @@ class SqlDb extends ChangeNotifier {
   intialDb() async {
     String databasepath = await getDatabasesPath();
     String path = join(databasepath, 'database.db');
-    Database mydb = await openDatabase(path,
-        onCreate: _onCreate, version: 2, onUpgrade: _onUpgrade);
+    Database mydb = await openDatabase(
+      path,
+      onCreate: _onCreate,
+      version: 2,
+      onUpgrade: _onUpgrade,
+    );
     return mydb;
   }
 
@@ -38,7 +42,7 @@ class SqlDb extends ChangeNotifier {
         "phone" TEXT, 
         "active" INTEGER NOT NULL)
 ''');
-//active==1 ,unActive==0
+    //active==1 ,unActive==0
     await batch.commit();
     print('Create Database and Table ====================');
   }
