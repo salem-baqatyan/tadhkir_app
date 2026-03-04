@@ -1,16 +1,70 @@
-# tadhkir_app
+# Tadhkir App (تطبيق تذكير) 💡⏰
 
-A new Flutter project.
+تطبيق مبتكر مبني باستخدام إطار العمل **Flutter**، يهدف إلى تعزيز الترابط الاجتماعي والتعاون على الخير. الوظيفة الأساسية للتطبيق هي ضبط منبهات ذكية تساعد المستخدم على الاستيقاظ وتذكيره بالاتصال بالآخرين (مثل صلاة الفجر، مواعيد الدواء، أو المهام الهامة) لضمان استيقاظهم أيضاً.
 
-## Getting Started
+## 🚀 الرؤية والهدف
 
-This project is a starting point for a Flutter application.
+في كثير من الأحيان، لا يكفي المنبه الشخصي للاستيقاظ، لذا يأتي "تذكير" ليكون حلقة وصل؛ حيث يقوم بتنبيهك لتقوم أنت بدور "المنبه البشري" للآخرين عبر الاتصال الهاتفي، مما يضيف طابعاً شخصياً وفعالاً لعملية الاستيقاظ.
 
-A few resources to get you started if this is your first Flutter project:
+## ✨ المميزات الرئيسية (Key Features)
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+* **نظام إدارة المنبهات (Alarm Management):** واجهة مرنة لإضافة وتعديل وحذف المنبهات المتكررة أو لمرة واحدة.
+* **قائمة الاتصال الذكية:** ربط المنبه بجهة اتصال معينة ليتم تذكيرك بالاتصال بها فور رنين المنبه.
+* **واجهة مستخدم عصرية (UI/UX):** تصميم بسيط يركز على سهولة الاستخدام والوصول السريع للوظائف الأساسية.
+* **إشعارات محلية (Local Notifications):** استخدام نظام التنبيهات في الجوال لضمان عمل التطبيق في الخلفية.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 🛠 الجانب التقني (Technical Stack)
+
+تم تطوير التطبيق باستخدام أحدث تقنيات **Flutter**، ويتضمن المشروع:
+
+* **Dart SDK:** لغة البرمجة الأساسية.
+* **State Management:** استخدام تقنيات إدارة الحالة لضمان استقرار التطبيق وتحديث البيانات لحظياً.
+* **Local Storage:** تخزين بيانات المنبهات وجهات الاتصال محلياً على الجهاز لسرعة الاستجابة.
+* **Custom Animations:** إضافة لمسات جمالية في التنقل بين الواجهات لتعزيز تجربة المستخدم.
+
+## 📂 هيكلية المشروع (Project Structure)
+
+يتبع المشروع نمطاً تنظيمياً نظيفاً (Clean Architecture) يسهل عملية الصيانة والتطوير:
+
+* `lib/models`: تحتوي على نماذج البيانات (المنبه، جهة الاتصال).
+* `lib/screens`: تحتوي على الواجهات الرئيسية للتطبيق.
+* `lib/widgets`: العناصر البرمجية القابلة لإعادة الاستخدام.
+* `lib/services`: الخدمات المسؤولة عن التنبيهات والاتصال وتخزين البيانات.
+
+## 🛠 كيفية التشغيل (Installation)
+
+1. قم بعمل Clone للمستودع:
+```bash
+git clone https://github.com/salem-baqatyan/tadhkir_app.git
+
+```
+
+
+2. انتقل إلى مجلد المشروع:
+```bash
+cd tadhkir_app
+
+```
+
+
+3. قم بتثبيت المكتبات المطلوبة:
+```bash
+flutter pub get
+
+```
+
+
+4. قم بتشغيل التطبيق:
+```bash
+flutter run
+
+```
+
+
+
+## 📝 ملاحظات للمطورين
+
+المشروع مصمم ليكون قابلاً للتوسع، حيث يمكن مستقبلاً إضافة ميزات مثل:
+
+* تكامل مع واجهة برمجة تطبيقات (API) للاتصال التلقائي.
+* دعم المزامنة السحابية عبر Firebase.
